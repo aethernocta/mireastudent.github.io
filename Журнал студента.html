@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Журнал студента</title>
+<style>
+  :root{
+    --bg:#0b0c0e;
+    --card:#16181b;
+    --card-border:#2a2d31;
+    --text:#f2f3f4;
+    --muted:#8b9096;
+    --blue:#3d8bff;
+    --teal:#3ad6c4;
+    --purple:#8a6bff;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100%;
+  }
+  .app{max-width:480px;margin:0 auto;padding:18px 16px 32px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:6px 2px 18px;
+  }
+  header.top h1{font-size:17px;font-weight:600;margin:0;color:var(--text);}
+  header.top .who{color:var(--blue);font-size:15px;}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:18px;
+    padding:16px 16px 8px;
+  }
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
+  }
+  .panel-head h2{font-size:19px;margin:0;font-weight:700;}
+  .icon-btn{
+    width:38px;height:38px;border-radius:11px;border:1px solid var(--card-border);
+    background:#1c1f22;display:flex;align-items:center;justify-content:center;
+    color:#c7cacd;flex:none;position:relative;
+  }
+  .icon-btn svg{width:19px;height:19px;stroke:#c7cacd;fill:none;stroke-width:1.7;}
+  .icon-btn .dot-badge{
+    position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;
+    background:#ff4d4d;border:1.5px solid #1c1f22;
+  }
+  .icon-group{display:flex;gap:8px;}
+
+  .month-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .month-row .nav{
+    background:none;border:none;color:var(--muted);font-size:20px;
+    width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .month-row .label{font-size:16px;color:#d7d9db;}
+
+  .week-strip{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px;
+  }
+  .day-col{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    cursor:pointer;padding:2px 0 6px;
+  }
+  .day-col .dow{font-size:12px;color:var(--muted);}
+  .day-col .num{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;color:var(--text);
+    border:1.5px solid transparent;
+  }
+  .day-col.selected .num{background:var(--blue);color:#fff;font-weight:700;}
+  .day-col.today:not(.selected) .num{border-color:var(--blue);color:var(--blue);}
+  .dots{display:flex;gap:3px;height:6px;align-items:center;}
+  .dot{width:5px;height:5px;border-radius:50%;}
+
+  .lessons{display:flex;flex-direction:column;gap:10px;padding-bottom:6px;}
+  .lesson{
+    border:1px solid var(--card-border);border-radius:16px;
+    padding:14px 14px 16px;background:#141618;
+  }
+  .lesson-top{
+    display:flex;align-items:center;gap:8px;justify-content:space-between;margin-bottom:12px;
+  }
+  .badges{display:flex;gap:6px;align-items:center;}
+  .badge{
+    padding:5px 12px;border-radius:14px;font-size:13px;font-weight:700;color:#04201c;
+  }
+  .badge.lk{background:var(--blue);color:#fff;}
+  .badge.pr{background:var(--teal);color:#04201c;}
+  .badge.chip{
+    background:#22252a;color:var(--text);font-weight:600;padding:5px 10px;
+  }
+  .badge.pair{background:#1c2c52;color:#7fa8ff;}
+  .time{color:#d7d9db;font-size:15px;}
+  .subject{font-size:18px;font-weight:700;margin:0 0 12px;line-height:1.3;}
+  .divider{height:1px;background:var(--card-border);margin:0 0 10px;}
+  .lesson-bottom{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+  .room{font-weight:700;font-size:15px;}
+  .teacher{color:var(--muted);font-size:14px;text-align:right;}
+
+  .break{
+    display:flex;justify-content:space-between;align-items:center;
+    border:1px solid var(--card-border);border-radius:14px;
+    padding:12px 14px;color:var(--muted);font-size:14.5px;background:#101214;
+  }
+
+  .empty{
+    text-align:center;color:var(--muted);padding:40px 10px 20px;font-size:15px;
+  }
+
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:#0f1113;border-top:1px solid var(--card-border);
+    padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));
+    display:flex;justify-content:space-between;align-items:center;
+    max-width:480px;margin:0 auto;
+  }
+  .tabbar .tab{color:#565a60;}
+  .tabbar .tab svg{width:24px;height:24px;stroke:#565a60;fill:none;stroke-width:1.6;}
+  .tabbar .tab.active svg{stroke:var(--blue);}
+  .tabbar .fab{
+    width:54px;height:54px;border-radius:50%;background:var(--blue);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    margin-top:-28px;box-shadow:0 6px 16px rgba(61,139,255,.4);
+  }
+  .tabbar .fab svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:1.7;}
+  .spacer{height:76px;}
+
+  .scanner{
+    position:fixed;inset:0;background:#000;z-index:50;
+    display:none;flex-direction:column;
+  }
+  .scanner.open{display:flex;}
+  .scanner video{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  }
+  .scanner .scrim{
+    position:absolute;inset:0;background:rgba(0,0,0,.35);
+  }
+  .scanner-top{
+    position:relative;z-index:2;display:flex;align-items:center;gap:10px;
+    padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px;
+  }
+  .scanner-close{
+    width:36px;height:36px;border-radius:50%;background:rgba(30,32,35,.85);
+    border:none;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;
+  }
+  .scanner-select{
+    background:rgba(30,32,35,.85);color:#eee;border:none;border-radius:20px;
+    padding:8px 14px;font-size:14px;flex:1;max-width:230px;
+  }
+  .viewfinder{
+    position:relative;z-index:2;margin:auto;width:min(74vw,300px);height:min(74vw,300px);
+  }
+  .viewfinder .corner{position:absolute;width:34px;height:34px;border:3px solid #fff;}
+  .viewfinder .tl{top:0;left:0;border-right:none;border-bottom:none;}
+  .viewfinder .tr{top:0;right:0;border-left:none;border-bottom:none;}
+  .viewfinder .bl{bottom:0;left:0;border-right:none;border-top:none;}
+  .viewfinder .br{bottom:0;right:0;border-left:none;border-top:none;}
+  .scanner-hint{
+    position:relative;z-index:2;text-align:center;color:#d7d9db;
+    font-size:14px;padding:14px 24px 0;
+  }
+  .scanner-result{
+    position:relative;z-index:2;margin:14px auto 0;max-width:88%;
+    background:rgba(20,22,24,.92);border:1px solid var(--card-border);
+    border-radius:14px;padding:12px 16px;color:#fff;font-size:14px;
+    word-break:break-word;text-align:center;
+  }
+  .scanner-bottom-space{flex:1;}
+
+  @media (prefers-color-scheme:light){
+    :root:not([data-theme="dark"]){
+      --bg:#0b0c0e;--card:#16181b;--text:#f2f3f4;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Журнал студента</h1>
+    <span class="who">Минин С.</span>
+  </header>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Журнал студента</h2>
+      <div class="icon-group">
+        <div class="icon-btn">
+          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <span class="dot-badge"></span>
+        </div>
+        <div class="icon-btn">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="month-row">
+      <button class="nav" id="prevWeek">‹</button>
+      <span class="label" id="monthLabel">Сентябрь 2026 · 4 неделя</span>
+      <button class="nav" id="nextWeek">›</button>
+    </div>
+
+    <div class="week-strip" id="weekStrip"></div>
+
+    <div class="lessons" id="lessons"></div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<div class="tabbar">
+  <span class="tab"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg></span>
+  <span class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+  <div class="fab" id="fabScan"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 14h2v2M14 19h2M19 19h2v2"/></svg></div>
+  <span class="tab"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M5 16c0-1.7 1.3-3 3-3s3 1.3 3 3M14 9h5M14 13h5"/></svg></span>
+  <span class="tab active"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span>
+</div>
+
+<div class="scanner" id="scannerView">
+  <video id="scannerVideo" playsinline muted autoplay></video>
+  <div class="scrim"></div>
+  <div class="scanner-top">
+    <button class="scanner-close" id="scannerClose">✕</button>
+    <select class="scanner-select" id="cameraSelect"></select>
+  </div>
+  <div class="viewfinder">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+  </div>
+  <p class="scanner-hint" id="scannerHint">Наведите камеру на QR-код</p>
+  <div class="scanner-result" id="scannerResult" style="display:none;"></div>
+  <div class="scanner-bottom-space"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+const DOW = ["пн","вт","ср","чт","пт","сб","вс"];
+
+// dot color codes: b=blue, t=teal, p=purple
+const week = [
+  {date:21, dots:["p","p"], lessons:[]},
+  {date:22, dots:["t","t","t"], lessons:[]},
+  {date:23, dots:["t","t","t","t","t"], lessons:[]},
+  {date:24, dots:["t","t","t","t","t","b"], lessons:[
+    {type:"ЛК",time:"09:00 - 10:30",subject:"Линейная алгебра и аналитическая геометрия",room:"А-13",teacher:"Гельмиярова В. Н."},
+    {gap:"10 минут"},
+    {type:"ЛК",time:"10:40 - 12:10",subject:"Физика",room:"А-13",teacher:"Амасев Д. В."},
+    {gap:"30 минут"},
+    {type:"ЛК",time:"12:40 - 14:10",subject:"Архитектура компьютера и операционные системы",room:"А-13",teacher:"Громов Е. В."},
+    {gap:"10 минут"},
+    {type:"ПР",time:"14:20 - 15:50",subject:"Физическая культура и спорт",room:"ФОК-7",teacher:"Кудрявцев Е. Ю."},
+    {gap:"30 минут"},
+    {type:"ПР",time:"16:20 - 17:50",subject:"Архитектура компьютера и операционные системы",room:"А-219-1",teacher:"Федоров Д. В., …"}
+  ]},
+  {date:25, dots:["b","b","b"], today:true, lessons:[
+    {type:"ЛК",time:"11:10 - 12:40",subject:"Введение в профессиональную деятельность",room:"А-61",teacher:"Клёсов Д. Н., …"},
+    {gap:"10 минут"},
+    {type:"ПР",time:"12:50 - 14:20",subject:"Информатика",room:"Б-411",teacher:"Клёсов Д. Н."},
+    {gap:"30 минут"},
+    {type:"ПР",time:"14:50 - 16:20",subject:"Информатика",room:"Б-411",teacher:"Клёсов Д. Н.",tag:"5 пара"}
+  ]},
+  {date:26, dots:["t","t","t"], lessons:[
+    {type:"ПР",time:"09:00 - 10:30",subject:"Линейная алгебра и аналитическая геометрия",room:"А-9-а",teacher:"Бородов Э. В.",tag:"1 пара"},
+    {gap:"10 минут"},
+    {type:"ПР",time:"10:40 - 12:10",subject:"Математический анализ",room:"А-411",teacher:"Шмурак М. И.",tag:"2 пара"},
+    {gap:"30 минут"},
+    {type:"ПР",time:"12:40 - 14:10",subject:"Иностранный язык 1 п/г",room:"И-302",teacher:"Филипская А. В.",tag:"3 пара"},
+    {type:"ПР",time:"12:40 - 14:10",subject:"Иностранный язык 2 п/г",room:"И-303",teacher:"Устюжанина М. В.",tag:"3 пара"}
+  ]},
+  {date:27, dots:[], lessons:[]}
+];
+
+const dotColor = {b:"var(--blue)", t:"var(--teal)", p:"var(--purple)"};
+let selectedIndex = week.findIndex(d=>d.today);
+if(selectedIndex<0) selectedIndex = 4;
+
+function renderStrip(){
+  const strip = document.getElementById("weekStrip");
+  strip.innerHTML = "";
+  week.forEach((d,i)=>{
+    const col = document.createElement("div");
+    col.className = "day-col" + (i===selectedIndex?" selected":"") + (d.today?" today":"");
+    col.innerHTML = `
+      <div class="dow">${DOW[i]}</div>
+      <div class="num">${d.date}</div>
+      <div class="dots">${d.dots.map(c=>`<span class="dot" style="background:${dotColor[c]}"></span>`).join("")}</div>
+    `;
+    col.addEventListener("click", ()=>{ selectedIndex = i; render(); });
+    strip.appendChild(col);
+  });
+}
+
+function renderLessons(){
+  const box = document.getElementById("lessons");
+  const day = week[selectedIndex];
+  const chipLabel = (day.date === 24 || day.date === 25) ? "+" : "Н";
+  box.innerHTML = "";
+  if(!day.lessons.length){
+    box.innerHTML = `<div class="empty">Занятий нет</div>`;
+    return;
+  }
+  day.lessons.forEach(item=>{
+    if(item.gap){
+      const g = document.createElement("div");
+      g.className = "break";
+      g.innerHTML = `<span>Перерыв</span><span>${item.gap}</span>`;
+      box.appendChild(g);
+      return;
+    }
+    const el = document.createElement("div");
+    el.className = "lesson";
+    const typeClass = item.type === "ЛК" ? "lk" : "pr";
+    el.innerHTML = `
+      <div class="lesson-top">
+        <div class="badges">
+          <span class="badge ${typeClass}">${item.type}</span>
+          <span class="badge chip">${chipLabel}</span>
+          ${item.tag ? `<span class="badge pair">${item.tag}</span>` : ""}
+        </div>
+        <span class="time">${item.time}</span>
+      </div>
+      <p class="subject">${item.subject}</p>
+      <div class="divider"></div>
+      <div class="lesson-bottom">
+        <span class="room">${item.room}</span>
+        <span class="teacher">${item.teacher}</span>
+      </div>
+    `;
+    box.appendChild(el);
+  });
+}
+
+function render(){
+  renderStrip();
+  renderLessons();
+  document.getElementById("lessons").scrollIntoView({block:"nearest"});
+}
+
+document.getElementById("prevWeek").addEventListener("click", ()=>{
+  selectedIndex = Math.max(0, selectedIndex-1);
+  render();
+});
+document.getElementById("nextWeek").addEventListener("click", ()=>{
+  selectedIndex = Math.min(week.length-1, selectedIndex+1);
+  render();
+});
+
+// swipe left/right to change day
+let touchX = null;
+document.addEventListener("touchstart", e=>{ touchX = e.touches[0].clientX; });
+document.addEventListener("touchend", e=>{
+  if(touchX===null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  if(Math.abs(dx) > 60){
+    if(dx < 0) selectedIndex = Math.min(week.length-1, selectedIndex+1);
+    else selectedIndex = Math.max(0, selectedIndex-1);
+    render();
+  }
+  touchX = null;
+});
+
+render();
+
+// ---- QR scanner ----
+const scannerView = document.getElementById("scannerView");
+const video = document.getElementById("scannerVideo");
+const cameraSelect = document.getElementById("cameraSelect");
+const scannerHint = document.getElementById("scannerHint");
+const scannerResult = document.getElementById("scannerResult");
+const scanCanvas = document.createElement("canvas");
+const scanCtx = scanCanvas.getContext("2d", { willReadFrequently: true });
+
+let currentStream = null;
+let scanRAF = null;
+
+async function listCameras(){
+  try{
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === "videoinput");
+    cameraSelect.innerHTML = "";
+    cams.forEach((c, i) => {
+      const opt = document.createElement("option");
+      opt.value = c.deviceId;
+      opt.textContent = c.label || `Камера ${i + 1}`;
+      cameraSelect.appendChild(opt);
+    });
+    return cams;
+  }catch(e){ return []; }
+}
+
+async function startCamera(deviceId){
+  stopCamera();
+  scannerResult.style.display = "none";
+  scannerHint.textContent = "Наведите камеру на QR-код";
+  try{
+    const constraints = deviceId
+      ? { video: { deviceId: { exact: deviceId } } }
+      : { video: { facingMode: { ideal: "environment" } } };
+    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = currentStream;
+    await video.play();
+    if(!cameraSelect.options.length) await listCameras();
+    scanLoop();
+  }catch(e){
+    scannerHint.textContent = "Нет доступа к камере. Разрешите доступ в настройках браузера.";
+  }
+}
+
+function stopCamera(){
+  if(scanRAF) cancelAnimationFrame(scanRAF);
+  if(currentStream){
+    currentStream.getTracks().forEach(t => t.stop());
+    currentStream = null;
+  }
+}
+
+function scanLoop(){
+  if(video.readyState === video.HAVE_ENOUGH_DATA && window.jsQR){
+    scanCanvas.width = video.videoWidth;
+    scanCanvas.height = video.videoHeight;
+    scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+    const imageData = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if(code && code.data){
+      scannerHint.textContent = "Код распознан";
+      scannerResult.style.display = "block";
+      scannerResult.textContent = code.data;
+    }
+  }
+  scanRAF = requestAnimationFrame(scanLoop);
+}
+
+document.getElementById("fabScan").addEventListener("click", () => {
+  scannerView.classList.add("open");
+  startCamera();
+});
+
+document.getElementById("scannerClose").addEventListener("click", () => {
+  stopCamera();
+  scannerView.classList.remove("open");
+});
+
+cameraSelect.addEventListener("change", () => {
+  startCamera(cameraSelect.value);
+});
+</script>
+</body>
+</html>
